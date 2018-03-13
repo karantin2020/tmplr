@@ -18,10 +18,10 @@ var (
 )
 
 var (
-	tmpl      *string
-	pkg       *string
-	out       *string
-	subpkg    *string
+	tmpl *string
+	pkg  *string
+	out  *string
+	// subpkg    *string
 	apn       *bool
 	tags      *bool
 	row_tags  *[]string
@@ -30,14 +30,14 @@ var (
 
 func main() {
 	flags := cli.App("tmplr", "Template renderer to use in golang code generation")
-	flags.Spec = "-t -g | ([-aps]... -o TGS... | FILE)"
+	flags.Spec = "-t -g | ([-ap]... -o TGS... | FILE)"
 	flags.Version("v version", "tmplr 0.2.0")
 	apn = flags.BoolOpt("a append", false, "append result of template render to file or not")
 	tags = flags.BoolOpt("g tags", false, "print all tags from template")
 	tmpl = flags.StringOpt("t template", "", "template to execute; may be in form file name or destination but always without .tmpl suffix")
 	out = flags.StringOpt("o out", "", "output file")
 	pkg = flags.StringOpt("p pkg", "", "output package")
-	subpkg = flags.StringOpt("s subpkg", "", "output subpkg name")
+	// subpkg = flags.StringOpt("s subpkg", "", "output subpkg name")
 	row_tags = flags.Strings(cli.StringsArg{
 		Name: "TGS",
 		Desc: "Tags to parse in format tag:value",
@@ -59,7 +59,10 @@ func worker() {
 	}
 	var templString string
 
-	if ft, err := ioutil.ReadFile(filepath.Join(root, (*tmpl)+".tmpl")); err != nil {
+	if hasSuffix := strings.HasSuffix(*tmpl, ".tmpl"); !hasSuffix {
+		*tmpl = *tmpl + ".tmpl"
+	}
+	if ft, err := ioutil.ReadFile(filepath.Join(root, *tmpl)); err != nil {
 		log.Fatal(err)
 	} else {
 		templString = string(ft)
@@ -72,17 +75,17 @@ func worker() {
 
 	pkgCnt := "package main\n\n"
 	if *pkg != "" {
-		pkgCnt = fmt.Sprintf("package %s\n\n", pkg)
+		pkgCnt = fmt.Sprintf("package %s\n\n", *pkg)
 	}
 
 	if *out == "" {
 		log.Fatal("didn't pass output file name")
 		os.Exit(1)
 	}
-	if *subpkg != "" {
-		pkgCnt = fmt.Sprintf("package %s\n\n", *subpkg)
-		*pkg = ""
-	}
+	// if *subpkg != "" {
+	// 	pkgCnt = fmt.Sprintf("package %s\n\n", *subpkg)
+	// 	*pkg = ""
+	// }
 
 	m := make(map[string]interface{})
 	for _, arg := range *row_tags {
@@ -124,7 +127,14 @@ func worker() {
 		s = s + templInst.ExecuteString(m)
 	}
 
-	path := filepath.Join((*pkg), (*out)+".go")
+	// path := filepath.Join((*pkg), (*out)+".go")
+	path := *out
+	if hasSuffix := strings.HasSuffix(*out, ".go"); !hasSuffix {
+		path = path + ".go"
+	}
+	if hasSlash := strings.Contains(*out, "/"); !hasSlash {
+		path = filepath.Join(*pkg, path)
+	}
 	var fileFlag int
 	if *apn {
 		fileFlag = os.O_CREATE | os.O_WRONLY | os.O_APPEND
