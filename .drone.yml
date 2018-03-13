@@ -1,0 +1,22 @@
+workspace:
+  base: /go
+  path: src/github.com/karantin2020/tmplr
+
+pipeline:
+  test1.8:
+    group: tests
+    image: golang:1.8.3-alpine
+    commands:
+      - go build -ldflags="-s -w" -v -o ${PWD##*/}
+      - ./tmplr -v
+      - go generate -v
+      - diff ./tmp/IntStr.go ./tmp/IntStr.go.go
+      
+  test1.9:
+    group: tests
+    image: golang:1.9.0-alpine3.6
+    commands:
+      - go build -ldflags="-s -w" -v -o ${PWD##*/}
+      - ./tmplr -v
+      - go generate -v
+      - diff ./tmp/IntStr.go ./tmp/IntStr.go.go
