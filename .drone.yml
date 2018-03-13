@@ -3,20 +3,26 @@ workspace:
   path: src/github.com/karantin2020/tmplr
 
 pipeline:
-  test1.8:
+  test1.9:
     group: tests
-    image: golang:1.8.3-alpine
+    image: golang:1.9-alpine3.7
     commands:
-      - go build -ldflags="-s -w" -v -o ${PWD##*/}
+      - apk update && apk add git
+      - go get -u -v github.com/jawher/mow.cli
+      - go get -u -v github.com/karantin2020/fasttemplate
+      - go build -ldflags="-s -w" -v -o tmplr
       - ./tmplr -v
       - go generate -v
       - diff ./tmp/IntStr.go ./tmp/IntStr.go.go
       
-  test1.9:
+  test1.10:
     group: tests
-    image: golang:1.9.0-alpine3.6
+    image: golang:1.10-alpine3.7
     commands:
-      - go build -ldflags="-s -w" -v -o ${PWD##*/}
+      - apk update && apk add git
+      - go get -u -v github.com/jawher/mow.cli
+      - go get -u -v github.com/karantin2020/fasttemplate
+      - go build -ldflags="-s -w" -v -o tmplr
       - ./tmplr -v
       - go generate -v
       - diff ./tmp/IntStr.go ./tmp/IntStr.go.go
